@@ -35,6 +35,17 @@
 *   **Ειδοποιήσεις:** `flutter_local_notifications`, `timezone`
 *   **Εικονίδια:** `lucide_icons`
 
-## 👨‍💻 Δημιουργός
-Αναπτύχθηκε με ❤️ από τον **Dev G.T**
-[Linktree](https://linktr.ee/Giannis.Tsimpouris)
+## 📱 Κατέβασμα εφαρμογής
+
+[![Android](https://img.shields.io/badge/Android-Download%20APK-3DDC84?logo=android&logoColor=white)](https://github.com/giannis10/shaving_status/releases/latest)
+[![iPhone / PWA](https://img.shields.io/badge/iPhone-Open%20PWA-0A84FF?logo=apple&logoColor=white)](https://giannis10.github.io/shaving_status/)
+[![iPhone / IPA](https://img.shields.io/badge/iPhone-Download%20IPA-0A84FF?logo=apple&logoColor=white)](https://github.com/giannis10/shaving_status/releases/latest)
+[![Web / PWA](https://img.shields.io/badge/Web-Open%20PWA-1F6FEB?logo=googlechrome&logoColor=white)](https://giannis10.github.io/shaving_status/)
+
+- Πάτα **Android** για να κατεβάσεις το πιο πρόσφατο APK.
+- Πάτα **iPhone / PWA** ή **Web / PWA** για να ανοίξεις την online έκδοση (Προσθήκη στην οθόνη έναρξης).
+- Πάτα **iPhone / IPA** για να κατεβάσεις το IPA αρχείο (απαιτείται Sideloading).
+
+## 📜 Άδεια
+
+Αυτό το project διανέμεται υπό την [MIT License](LICENSE).

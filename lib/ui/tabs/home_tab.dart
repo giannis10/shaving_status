@@ -7,6 +7,9 @@ import '../../models/models.dart';
 import '../colors.dart';
 import '../../utils/copy.dart';
 import 'body_map.dart';
+import '../../services/updater_service.dart';
+import '../../services/pwa_service.dart';
+import 'package:flutter/foundation.dart';
 
 class HomeTab extends StatefulWidget {
   final String language;
@@ -19,6 +22,20 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   String _bodySide = 'front'; // 'front' or 'back'
+  bool _hasUpdate = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkForUpdates();
+  }
+
+  Future<void> _checkForUpdates() async {
+    final hasUpdate = await UpdaterService.checkForUpdates();
+    if (hasUpdate && mounted) {
+      setState(() => _hasUpdate = true);
+    }
+  }
 
   Color _getToolColor(ToolColor color) {
     switch (color) {
@@ -246,10 +263,93 @@ class _HomeTabState extends State<HomeTab> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Ειδοποίηση Νέας Έκδοσης (Update Banner)
+          if (_hasUpdate)
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.lime.withOpacity(0.1),
+                border: Border.all(color: AppColors.lime.withOpacity(0.5)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.arrowUpCircle, color: AppColors.lime),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.language == 'el' ? 'Νέα Έκδοση Διαθέσιμη!' : 'New Update Available!',
+                          style: const TextStyle(color: AppColors.lime, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          widget.language == 'el' ? 'Κατέβασε την πιο πρόσφατη έκδοση.' : 'Download the latest version.',
+                          style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => UpdaterService.launchUpdateUrl(),
+                    style: TextButton.styleFrom(backgroundColor: AppColors.lime, foregroundColor: Colors.black),
+                    child: Text(widget.language == 'el' ? 'Λήψη' : 'Update'),
+                  ),
+                ],
+              ),
+            ),
+
+          // PWA Install Button (Μόνο στο Web)
+          if (kIsWeb)
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  // Αν είναι iOS Web (Safari), βγάλε ένα Dialog με οδηγίες
+                  final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
+                  if (isIOS) {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: AppColors.background,
+                        title: Text(widget.language == 'el' ? 'Εγκατάσταση στο iPhone' : 'Install on iPhone'),
+                        content: Text(
+                          widget.language == 'el' 
+                            ? 'Για να εγκαταστήσεις το app, πάτα το κουμπί "Κοινοποίηση" (Share) στο κάτω μέρος του Safari και μετά επέλεξε "Προσθήκη στην οθόνη έναρξης" (Add to Home Screen).'
+                            : 'To install the app, tap the "Share" button at the bottom of Safari and select "Add to Home Screen".'
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx), 
+                            child: const Text('OK', style: TextStyle(color: AppColors.cyan)),
+                          )
+                        ],
+                      ),
+                    );
+                  } else {
+                    // Αν είναι Chrome / Android / Desktop κλπ
+                    installPwa();
+                  }
+                },
+                icon: const Icon(LucideIcons.download),
+                label: Text(widget.language == 'el' ? 'Εγκατάσταση App (Install)' : 'Install App'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.cyan.withOpacity(0.1),
+                  foregroundColor: AppColors.cyan,
+                  side: BorderSide(color: AppColors.cyan.withOpacity(0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+
           // Blade Panel
           Container(
             padding: const EdgeInsets.all(12),
