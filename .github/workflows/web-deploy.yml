@@ -30,7 +30,7 @@ jobs:
         run: flutter pub get
         
       - name: Build Web (PWA)
-        run: flutter build web --release --web-renderer canvaskit --base-href "/shaving_status/"
+        run: flutter build web --release --base-href "/shaving_status/"
         
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

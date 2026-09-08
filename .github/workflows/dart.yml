@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -37,17 +37,18 @@ jobs:
           VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1 | tr -d '\r')
           echo "APP_VERSION=v$VERSION" >> $GITHUB_ENV
           
-      - name: Setup Keystore
+      - name: Setup Keystore & key.properties
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           echo "$KEYSTORE_BASE64" | tr -d '\n\r ' | base64 --decode > android/app/upload-keystore.jks
+          echo "storePassword=$KEY_PASSWORD" > android/key.properties
+          echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+          echo "keyAlias=upload" >> android/key.properties
+          echo "storeFile=../app/upload-keystore.jks" >> android/key.properties
           
       - name: Build APK (Release)
-        env:
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: flutter build apk --release
         
       - name: Upload APK to release
@@ -88,14 +89,15 @@ jobs:
       - name: Prepare IPA
         run: |
           mkdir -p Payload
-          mv build/ios/iphoneos/Runner.app Payload/
+          mv Runner.app Payload/
           zip -r FlutterIpaExport.ipa Payload
+        working-directory: build/ios/iphoneos
           
       - name: Upload iOS IPA to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: FlutterIpaExport.ipa
+          file: build/ios/iphoneos/FlutterIpaExport.ipa
           asset_name: FlutterIpaExport.ipa
           tag: ${{ env.APP_VERSION }}
           overwrite: true
