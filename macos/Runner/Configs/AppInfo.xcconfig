@@ -8,7 +8,7 @@
 PRODUCT_NAME = shaving_status
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.shavingStatus
+PRODUCT_BUNDLE_IDENTIFIER = com.shaving_status.gt
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.shaving_status.gt. All rights reserved.
