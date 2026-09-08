@@ -1,0 +1,101 @@
+name: Flutter iOS + Android Build
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # --- Android Build Job ---
+  build-android:
+    name: 🤖 Android APK Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+          
+      - name: Install dependencies
+        run: flutter pub get
+        
+      - name: Extract Version
+        id: extract_version
+        run: |
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1 | tr -d '\r')
+          echo "APP_VERSION=v$VERSION" >> $GITHUB_ENV
+          
+      - name: Setup Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | tr -d '\n\r ' | base64 --decode > android/app/upload-keystore.jks
+          
+      - name: Build APK (Release)
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        run: flutter build apk --release
+        
+      - name: Upload APK to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/app/outputs/flutter-apk/app-release.apk
+          asset_name: app-release.apk
+          tag: ${{ env.APP_VERSION }}
+          overwrite: true
+          body: "Auto-generated Android & iOS Builds"
+
+  # --- iOS Build Job ---
+  build-ios:
+    name: 🎉 iOS Build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          architecture: x64
+          
+      - name: Install dependencies
+        run: flutter pub get
+        
+      - name: Extract Version
+        id: extract_version
+        run: |
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1 | tr -d '\r')
+          echo "APP_VERSION=v$VERSION" >> $GITHUB_ENV
+          
+      - name: Build iOS (Release, no code-sign)
+        run: flutter build ios --release --no-codesign
+        
+      - name: Prepare IPA
+        run: |
+          mkdir -p Payload
+          mv build/ios/iphoneos/Runner.app Payload/
+          zip -r FlutterIpaExport.ipa Payload
+          
+      - name: Upload iOS IPA to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: FlutterIpaExport.ipa
+          asset_name: FlutterIpaExport.ipa
+          tag: ${{ env.APP_VERSION }}
+          overwrite: true
