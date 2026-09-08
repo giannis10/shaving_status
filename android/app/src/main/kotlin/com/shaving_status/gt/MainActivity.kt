@@ -1,4 +1,4 @@
-package com.example.shaving_status
+package com.shaving_status.gt
 
 import io.flutter.embedding.android.FlutterActivity
 
