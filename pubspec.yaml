@@ -37,13 +37,13 @@ dependencies:
   shared_preferences: ^2.5.3
   provider: ^6.1.5+1
   intl: ^0.20.3
-  lucide_icons: ^0.257.0
   path_drawing: ^1.0.1
   url_launcher: ^6.3.2
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
   http: ^1.6.0
   package_info_plus: ^9.0.1
+  lucide_icons_flutter: ^3.1.19
 
 dev_dependencies:
   flutter_test:

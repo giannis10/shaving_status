@@ -5,9 +5,7 @@ allprojects {
     }
 }
 
-val newBuildDir: Directory =
-    rootProject.layout.projectDirectory
-        .dir("C:/flutter_builds/shaving_status")
+val newBuildDir: Directory = rootProject.layout.projectDirectory.dir("../../build")
 rootProject.layout.buildDirectory.value(newBuildDir)
 
 subprojects {

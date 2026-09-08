@@ -84,20 +84,19 @@ jobs:
           echo "APP_VERSION=v$VERSION" >> $GITHUB_ENV
           
       - name: Build iOS (Release, no code-sign)
-        run: flutter build ios --release --no-codesign
+        run: flutter build ipa --release --no-codesign
         
       - name: Prepare IPA
         run: |
           mkdir -p Payload
-          mv Runner.app Payload/
+          mv build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app Payload/
           zip -r FlutterIpaExport.ipa Payload
-        working-directory: build/ios/iphoneos
           
       - name: Upload iOS IPA to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/ios/iphoneos/FlutterIpaExport.ipa
+          file: FlutterIpaExport.ipa
           asset_name: FlutterIpaExport.ipa
           tag: ${{ env.APP_VERSION }}
           overwrite: true
