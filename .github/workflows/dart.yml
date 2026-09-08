@@ -51,7 +51,7 @@ jobs:
           echo "storeFile=../app/upload-keystore.jks" >> android/key.properties
           
       - name: Build APK (Release)
-        run: flutter build apk --release --android-skip-build-dependency-validation
+        run: flutter build apk --release --android-skip-build-dependency-validation -v
         
       - name: Upload APK to release
         uses: svenstaro/upload-release-action@v2
