@@ -120,7 +120,7 @@ class GroomingStore extends ChangeNotifier {
     return '${DateTime.now().millisecondsSinceEpoch}-${DateTime.now().microsecondsSinceEpoch}';
   }
 
-  void logShave(String zoneId, String toolId, double hairLengthMm, TimingFeedback timingFeedback) {
+  void logShave(String zoneId, String toolId, double hairLengthMm, TimingFeedback timingFeedback, {bool againstTheGrain = false}) {
     final now = DateTime.now().millisecondsSinceEpoch;
     
     // Update Zones
@@ -130,12 +130,17 @@ class GroomingStore extends ChangeNotifier {
             ? ((now - zone.lastShaved!) / 86400000).clamp(0.5, double.infinity)
             : 0.0;
         final measuredRate = elapsedDays > 0 ? hairLengthMm / elapsedDays : zone.growthRateMmDay;
+        
+        // Timing feedback adjusts the base duration
         final feedbackFactor = timingFeedback == TimingFeedback.EARLY ? 1.12 : (timingFeedback == TimingFeedback.LATE ? 0.88 : 1.0);
         
+        // "Against the grain" means shave is closer, lasts ~25% longer before growth is annoying
+        final methodFactor = againstTheGrain ? 1.25 : 1.0;
+
         final updatedZone = zone.copyWith(
           lastShaved: now,
           growthRateMmDay: zone.learningSamples == 0 ? measuredRate : zone.growthRateMmDay * 0.7 + measuredRate * 0.3,
-          maxDaysThreshold: ((elapsedDays > 0 ? elapsedDays : zone.maxDaysThreshold) * feedbackFactor).round().clamp(1, 9999),
+          maxDaysThreshold: (((elapsedDays > 0 ? elapsedDays : zone.maxDaysThreshold) * feedbackFactor) * methodFactor).round().clamp(1, 9999),
           learningSamples: zone.learningSamples + 1,
         );
         
@@ -188,6 +193,7 @@ class GroomingStore extends ChangeNotifier {
       toolId: toolId,
       hairLengthMm: hairLengthMm,
       timingFeedback: timingFeedback,
+      againstTheGrain: againstTheGrain,
     );
     _logs.insert(0, log);
 
@@ -266,5 +272,61 @@ class GroomingStore extends ChangeNotifier {
 
     _saveState();
     notifyListeners();
+  }
+
+  Future<String> exportData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stateMap = {
+      'tools': _tools.map((e) => e.toJson()).toList(),
+      'zones': _zones.map((e) => e.toJson()).toList(),
+      'logs': _logs.map((e) => e.toJson()).toList(),
+      'settings': {
+        'notificationsEnabled': _notificationsEnabled,
+        'notificationHour': _notificationHour,
+        'notificationMinute': _notificationMinute,
+        'useAverageTime': _useAverageTime,
+      },
+      'userName': prefs.getString('userName'),
+      'language': prefs.getString('language'),
+    };
+    return jsonEncode(stateMap);
+  }
+
+  Future<bool> importData(String jsonString) async {
+    try {
+      final Map<String, dynamic> parsed = jsonDecode(jsonString);
+      
+      // Basic validation
+      if (!parsed.containsKey('tools') || !parsed.containsKey('zones') || !parsed.containsKey('logs')) {
+        return false;
+      }
+
+      _tools = (parsed['tools'] as List).map((e) => Tool.fromJson(e)).toList();
+      _zones = (parsed['zones'] as List).map((e) => Zone.fromJson(e)).toList();
+      _logs = (parsed['logs'] as List).map((e) => GroomingLog.fromJson(e)).toList();
+      
+      if (parsed.containsKey('settings')) {
+        final s = parsed['settings'];
+        _notificationsEnabled = s['notificationsEnabled'] ?? true;
+        _notificationHour = s['notificationHour'] ?? 9;
+        _notificationMinute = s['notificationMinute'] ?? 0;
+        _useAverageTime = s['useAverageTime'] ?? false;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      if (parsed.containsKey('userName') && parsed['userName'] != null) {
+        await prefs.setString('userName', parsed['userName']);
+      }
+      if (parsed.containsKey('language') && parsed['language'] != null) {
+        await prefs.setString('language', parsed['language']);
+      }
+
+      _saveState();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Import Error: $e');
+      return false;
+    }
   }
 }

@@ -53,6 +53,7 @@ class _HomeTabState extends State<HomeTab> {
     String selectedTool = store.tools.isNotEmpty ? store.tools.first.id : '';
     double hairLength = math.max(0.5, (zone.growthRateMmDay * zone.maxDaysThreshold * 2).round() / 2);
     TimingFeedback timingFeedback = TimingFeedback.RIGHT;
+    bool againstTheGrain = false;
 
     showModalBottomSheet(
       context: context,
@@ -180,6 +181,27 @@ class _HomeTabState extends State<HomeTab> {
 
                   const SizedBox(height: 16),
 
+                  // Against the grain
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.muted,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: SwitchListTile(
+                      title: Text(
+                        t['againstTheGrain']!,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      activeColor: AppColors.cyan,
+                      value: againstTheGrain,
+                      onChanged: (val) => setModalState(() => againstTheGrain = val),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
                   // Recommendation
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -216,7 +238,7 @@ class _HomeTabState extends State<HomeTab> {
                     height: 48,
                     child: ElevatedButton(
                       onPressed: selectedTool.isEmpty ? null : () {
-                        store.logShave(zone.id, selectedTool, hairLength, timingFeedback);
+                        store.logShave(zone.id, selectedTool, hairLength, timingFeedback, againstTheGrain: againstTheGrain);
                         Navigator.pop(ctx);
                       },
                       style: ElevatedButton.styleFrom(

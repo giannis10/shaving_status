@@ -122,6 +122,7 @@ class GroomingLog {
   final String toolId;
   final double? hairLengthMm;
   final TimingFeedback? timingFeedback;
+  final bool? againstTheGrain;
 
   GroomingLog({
     required this.id,
@@ -131,6 +132,7 @@ class GroomingLog {
     required this.toolId,
     this.hairLengthMm,
     this.timingFeedback,
+    this.againstTheGrain,
   });
 
   factory GroomingLog.fromJson(Map<String, dynamic> json) {
@@ -144,6 +146,7 @@ class GroomingLog {
       timingFeedback: json['timingFeedback'] != null 
           ? TimingFeedback.values.firstWhere((e) => e.name == json['timingFeedback']) 
           : null,
+      againstTheGrain: json['againstTheGrain'] as bool?,
     );
   }
 
@@ -156,6 +159,7 @@ class GroomingLog {
       'toolId': toolId,
       'hairLengthMm': hairLengthMm,
       'timingFeedback': timingFeedback?.name,
+      'againstTheGrain': againstTheGrain,
     };
   }
 }

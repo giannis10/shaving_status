@@ -45,6 +45,7 @@ class _GroomingAppState extends State<GroomingApp> {
   String _language = 'en';
   String? _userName;
   bool _isLoaded = false;
+  bool _onboardingLanguageSelected = false;
 
   @override
   void initState() {
@@ -78,6 +79,93 @@ class _GroomingAppState extends State<GroomingApp> {
   }
 
   Widget _buildOnboarding(Map<String, String> t) {
+    if (!_onboardingLanguageSelected) {
+      return Container(
+        color: AppColors.background,
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _language == 'el' ? 'Επιλογή Γλώσσας' : 'Select language',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 48),
+              
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    _setLanguage('en');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.muted,
+                    foregroundColor: AppColors.foreground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: _language == 'en' ? AppColors.cyan : Colors.transparent, width: 2),
+                    ),
+                  ),
+                  child: const Text('English', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    _setLanguage('el');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.muted,
+                    foregroundColor: AppColors.foreground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: _language == 'el' ? AppColors.cyan : Colors.transparent, width: 2),
+                    ),
+                  ),
+                  child: const Text('Ελληνικά', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [AppColors.cyan, AppColors.violet]),
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.cyan.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() => _onboardingLanguageSelected = true);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(_language == 'el' ? 'Επόμενο' : 'Next', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     String tempName = '';
     return Container(
       color: AppColors.background,
