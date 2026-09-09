@@ -29,6 +29,55 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _checkForUpdates();
+    _checkPwaInstallPrompt();
+  }
+
+  Future<void> _checkPwaInstallPrompt() async {
+    // Check if running on web and not installed as standalone PWA
+    if (kIsWeb && !isPwaInstalled()) {
+      // The user wants it to show EVERY time they open it until they install it.
+      // Small delay to let the UI build first
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
+
+      final t = copy[widget.language]!;
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.background,
+          title: Text(
+            widget.language == 'el' ? 'Εγκατάσταση Εφαρμογής' : 'Install App',
+          ),
+          content: Text(
+            widget.language == 'el'
+                ? 'Για καλύτερη εμπειρία, προτείνουμε να εγκαταστήσετε την εφαρμογή στη συσκευή σας ώστε να τη βρίσκετε εύκολα και να δουλεύει άψογα.'
+                : 'For a better experience, we recommend installing the app on your device so you can access it easily and it works flawlessly.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                t['cancel'] ??
+                    (widget.language == 'el' ? 'Όχι τώρα' : 'Not Now'),
+                style: const TextStyle(color: AppColors.mutedForeground),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                installPwa();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.cyan,
+                foregroundColor: Colors.black,
+              ),
+              child: Text(widget.language == 'el' ? 'Εγκατάσταση' : 'Install'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Future<void> _checkForUpdates() async {
@@ -43,19 +92,26 @@ class _HomeTabState extends State<HomeTab> {
 
   Color _getToolColor(ToolColor color) {
     switch (color) {
-      case ToolColor.lime: return AppColors.lime;
-      case ToolColor.cyan: return AppColors.cyan;
-      case ToolColor.coral: return AppColors.coral;
-      case ToolColor.violet: return AppColors.violet;
+      case ToolColor.lime:
+        return AppColors.lime;
+      case ToolColor.cyan:
+        return AppColors.cyan;
+      case ToolColor.coral:
+        return AppColors.coral;
+      case ToolColor.violet:
+        return AppColors.violet;
     }
   }
 
   void _openZoneAction(Zone zone) {
     final t = copy[widget.language]!;
     final store = context.read<GroomingStore>();
-    
+
     String selectedTool = store.tools.isNotEmpty ? store.tools.first.id : '';
-    double hairLength = math.max(0.5, (zone.growthRateMmDay * zone.maxDaysThreshold * 2).round() / 2);
+    double hairLength = math.max(
+      0.5,
+      (zone.growthRateMmDay * zone.maxDaysThreshold * 2).round() / 2,
+    );
     TimingFeedback timingFeedback = TimingFeedback.RIGHT;
     bool againstTheGrain = false;
 
@@ -85,15 +141,21 @@ class _HomeTabState extends State<HomeTab> {
                 children: [
                   Text(
                     '${t['log']} $zoneName — ${t['shave']}',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     t['chooseTool']!,
-                    style: const TextStyle(color: AppColors.mutedForeground, fontSize: 14),
+                    style: const TextStyle(
+                      color: AppColors.mutedForeground,
+                      fontSize: 14,
+                    ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Tool Selection
                   SizedBox(
                     height: 180,
@@ -104,29 +166,53 @@ class _HomeTabState extends State<HomeTab> {
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ElevatedButton(
-                              onPressed: () => setModalState(() => selectedTool = tool.id),
+                              onPressed: () =>
+                                  setModalState(() => selectedTool = tool.id),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: isSelected ? AppColors.muted : Colors.transparent,
+                                backgroundColor: isSelected
+                                    ? AppColors.muted
+                                    : Colors.transparent,
                                 foregroundColor: AppColors.foreground,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
-                                  side: BorderSide(color: isSelected ? _getToolColor(tool.color) : AppColors.border),
+                                  side: BorderSide(
+                                    color: isSelected
+                                        ? _getToolColor(tool.color)
+                                        : AppColors.border,
+                                  ),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
                               ),
                               child: Row(
                                 children: [
                                   Container(
                                     width: 12,
                                     height: 12,
-                                    decoration: BoxDecoration(color: _getToolColor(tool.color), shape: BoxShape.circle),
+                                    decoration: BoxDecoration(
+                                      color: _getToolColor(tool.color),
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
-                                    child: Text(tool.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                    child: Text(
+                                      tool.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                   ),
-                                  if (isSelected) const Icon(LucideIcons.check, size: 18) else const Icon(LucideIcons.chevronRight, size: 18),
+                                  if (isSelected)
+                                    const Icon(LucideIcons.check, size: 18)
+                                  else
+                                    const Icon(
+                                      LucideIcons.chevronRight,
+                                      size: 18,
+                                    ),
                                 ],
                               ),
                             ),
@@ -135,15 +221,21 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Hair Length
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(t['hairLength']!, style: const TextStyle(fontSize: 14)),
-                      Text('${hairLength.toStringAsFixed(1)} mm', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        t['hairLength']!,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      Text(
+                        '${hairLength.toStringAsFixed(1)} mm',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                   Slider(
@@ -164,19 +256,32 @@ class _HomeTabState extends State<HomeTab> {
                   Row(
                     children: TimingFeedback.values.map((v) {
                       final isSelected = timingFeedback == v;
-                      final label = v == TimingFeedback.EARLY ? t['early']! : v == TimingFeedback.RIGHT ? t['right']! : t['late']!;
+                      final label = v == TimingFeedback.EARLY
+                          ? t['early']!
+                          : v == TimingFeedback.RIGHT
+                          ? t['right']!
+                          : t['late']!;
                       return Expanded(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: OutlinedButton(
-                            onPressed: () => setModalState(() => timingFeedback = v),
+                            onPressed: () =>
+                                setModalState(() => timingFeedback = v),
                             style: OutlinedButton.styleFrom(
-                              backgroundColor: isSelected ? AppColors.foreground : Colors.transparent,
-                              foregroundColor: isSelected ? AppColors.background : AppColors.foreground,
+                              backgroundColor: isSelected
+                                  ? AppColors.foreground
+                                  : Colors.transparent,
+                              foregroundColor: isSelected
+                                  ? AppColors.background
+                                  : AppColors.foreground,
                               side: BorderSide(color: AppColors.border),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
-                            child: Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11)),
+                            child: Text(
+                              label,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 11),
+                            ),
                           ),
                         ),
                       );
@@ -199,8 +304,12 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       activeColor: AppColors.cyan,
                       value: againstTheGrain,
-                      onChanged: (val) => setModalState(() => againstTheGrain = val),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                      onChanged: (val) =>
+                          setModalState(() => againstTheGrain = val),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 0,
+                      ),
                     ),
                   ),
 
@@ -217,19 +326,40 @@ class _HomeTabState extends State<HomeTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(t['recommendation']!.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.mutedForeground)),
+                        Text(
+                          t['recommendation']!.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
                         const SizedBox(height: 4),
                         RichText(
                           text: TextSpan(
-                            style: const TextStyle(color: AppColors.foreground, fontSize: 14),
+                            style: const TextStyle(
+                              color: AppColors.foreground,
+                              fontSize: 14,
+                            ),
                             children: [
                               TextSpan(text: '${t['nextIn']} '),
-                              TextSpan(text: '${zone.maxDaysThreshold} ${t['days']}.', style: const TextStyle(fontWeight: FontWeight.bold)),
+                              TextSpan(
+                                text: '${zone.maxDaysThreshold} ${t['days']}.',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(t['learning']!, style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12)),
+                        Text(
+                          t['learning']!,
+                          style: const TextStyle(
+                            color: AppColors.mutedForeground,
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -241,17 +371,30 @@ class _HomeTabState extends State<HomeTab> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: selectedTool.isEmpty ? null : () {
-                        store.logShave(zone.id, selectedTool, hairLength, timingFeedback, againstTheGrain: againstTheGrain);
-                        Navigator.pop(ctx);
-                      },
+                      onPressed: selectedTool.isEmpty
+                          ? null
+                          : () {
+                              store.logShave(
+                                zone.id,
+                                selectedTool,
+                                hairLength,
+                                timingFeedback,
+                                againstTheGrain: againstTheGrain,
+                              );
+                              Navigator.pop(ctx);
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.foreground,
                         foregroundColor: AppColors.background,
                         disabledBackgroundColor: AppColors.muted,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                       ),
-                      child: Text(t['confirm']!, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      child: Text(
+                        t['confirm']!,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -260,7 +403,12 @@ class _HomeTabState extends State<HomeTab> {
                     height: 48,
                     child: TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: Text(t['cancel']!, style: const TextStyle(color: AppColors.mutedForeground)),
+                      child: Text(
+                        t['cancel']!,
+                        style: const TextStyle(
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -282,7 +430,10 @@ class _HomeTabState extends State<HomeTab> {
     if (store.zones.isNotEmpty) {
       double total = 0;
       for (var zone in store.zones) {
-        final elapsed = zone.lastShaved != null ? (DateTime.now().millisecondsSinceEpoch - zone.lastShaved!) / 86400000 : zone.maxDaysThreshold.toDouble();
+        final elapsed = zone.lastShaved != null
+            ? (DateTime.now().millisecondsSinceEpoch - zone.lastShaved!) /
+                  86400000
+            : zone.maxDaysThreshold.toDouble();
         total += math.max(0, 100 - (elapsed / zone.maxDaysThreshold) * 100);
       }
       groomingScore = (total / store.zones.length).round();
@@ -312,19 +463,32 @@ class _HomeTabState extends State<HomeTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.language == 'el' ? 'Νέα Έκδοση Διαθέσιμη!' : 'New Update Available!',
-                          style: const TextStyle(color: AppColors.lime, fontWeight: FontWeight.bold),
+                          widget.language == 'el'
+                              ? 'Νέα Έκδοση Διαθέσιμη!'
+                              : 'New Update Available!',
+                          style: const TextStyle(
+                            color: AppColors.lime,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
-                          widget.language == 'el' ? 'Κατέβασε την πιο πρόσφατη έκδοση.' : 'Download the latest version.',
-                          style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12),
+                          widget.language == 'el'
+                              ? 'Κατέβασε την πιο πρόσφατη έκδοση.'
+                              : 'Download the latest version.',
+                          style: const TextStyle(
+                            color: AppColors.mutedForeground,
+                            fontSize: 12,
+                          ),
                         ),
                         if (_releaseNotes.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               _releaseNotes,
-                              style: const TextStyle(color: Colors.white70, fontSize: 11),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                              ),
                             ),
                           ),
                       ],
@@ -332,7 +496,10 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                   TextButton(
                     onPressed: () => UpdaterService.launchUpdateUrl(),
-                    style: TextButton.styleFrom(backgroundColor: AppColors.lime, foregroundColor: Colors.black),
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.lime,
+                      foregroundColor: Colors.black,
+                    ),
                     child: Text(widget.language == 'el' ? 'Λήψη' : 'Update'),
                   ),
                 ],
@@ -353,17 +520,24 @@ class _HomeTabState extends State<HomeTab> {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         backgroundColor: AppColors.background,
-                        title: Text(widget.language == 'el' ? 'Εγκατάσταση στο iPhone' : 'Install on iPhone'),
+                        title: Text(
+                          widget.language == 'el'
+                              ? 'Εγκατάσταση στο iPhone'
+                              : 'Install on iPhone',
+                        ),
                         content: Text(
-                          widget.language == 'el' 
-                            ? 'Για να εγκαταστήσεις το app, πάτα το κουμπί "Κοινοποίηση" (Share) στο κάτω μέρος του Safari και μετά επέλεξε "Προσθήκη στην οθόνη έναρξης" (Add to Home Screen).'
-                            : 'To install the app, tap the "Share" button at the bottom of Safari and select "Add to Home Screen".'
+                          widget.language == 'el'
+                              ? 'Για να εγκαταστήσεις το app, πάτα το κουμπί "Κοινοποίηση" (Share) στο κάτω μέρος του Safari και μετά επέλεξε "Προσθήκη στην οθόνη έναρξης" (Add to Home Screen).'
+                              : 'To install the app, tap the "Share" button at the bottom of Safari and select "Add to Home Screen".',
                         ),
                         actions: [
                           TextButton(
-                            onPressed: () => Navigator.pop(ctx), 
-                            child: const Text('OK', style: TextStyle(color: AppColors.cyan)),
-                          )
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text(
+                              'OK',
+                              style: TextStyle(color: AppColors.cyan),
+                            ),
+                          ),
                         ],
                       ),
                     );
@@ -373,13 +547,19 @@ class _HomeTabState extends State<HomeTab> {
                   }
                 },
                 icon: const Icon(LucideIcons.download),
-                label: Text(widget.language == 'el' ? 'Εγκατάσταση App (Install)' : 'Install App'),
+                label: Text(
+                  widget.language == 'el'
+                      ? 'Εγκατάσταση App (Install)'
+                      : 'Install App',
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.cyan.withOpacity(0.1),
                   foregroundColor: AppColors.cyan,
                   side: BorderSide(color: AppColors.cyan.withOpacity(0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
@@ -398,9 +578,18 @@ class _HomeTabState extends State<HomeTab> {
                   children: [
                     Text(
                       t['bladeLife']!.toUpperCase(),
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1.5, color: AppColors.mutedForeground),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
+                        color: AppColors.mutedForeground,
+                      ),
                     ),
-                    const Icon(LucideIcons.scissors, size: 16, color: AppColors.foreground),
+                    const Icon(
+                      LucideIcons.scissors,
+                      size: 16,
+                      color: AppColors.foreground,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -408,14 +597,23 @@ class _HomeTabState extends State<HomeTab> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _ToolGauge(name: t['groomed']!, health: groomingScore, color: AppColors.coral, remainingText: t['bodyAverage']!),
+                      _ToolGauge(
+                        name: t['groomed']!,
+                        health: groomingScore,
+                        color: AppColors.coral,
+                        remainingText: t['bodyAverage']!,
+                      ),
                       ...store.tools.map((tool) {
-                        final health = math.max(0, ((1 - tool.currentUses / tool.maxUses) * 100).round());
+                        final health = math.max(
+                          0,
+                          ((1 - tool.currentUses / tool.maxUses) * 100).round(),
+                        );
                         return _ToolGauge(
-                          name: tool.name, 
-                          health: health, 
-                          color: _getToolColor(tool.color), 
-                          remainingText: '${tool.maxUses - tool.currentUses} ${t['usesRemaining']}',
+                          name: tool.name,
+                          health: health,
+                          color: _getToolColor(tool.color),
+                          remainingText:
+                              '${tool.maxUses - tool.currentUses} ${t['usesRemaining']}',
                         );
                       }),
                     ],
@@ -436,13 +634,28 @@ class _HomeTabState extends State<HomeTab> {
                 children: [
                   Text(
                     t['bodyMap']!.toUpperCase(),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1.5, color: AppColors.mutedForeground),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.5,
+                      color: AppColors.mutedForeground,
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  Text(t['bodyQuestion']!, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text(
+                    t['bodyQuestion']!,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
-              const Icon(LucideIcons.sparkles, size: 20, color: AppColors.foreground),
+              const Icon(
+                LucideIcons.sparkles,
+                size: 20,
+                color: AppColors.foreground,
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -462,10 +675,17 @@ class _HomeTabState extends State<HomeTab> {
                     child: Container(
                       height: 32,
                       decoration: BoxDecoration(
-                        color: _bodySide == 'front' ? AppColors.border : Colors.transparent,
+                        color: _bodySide == 'front'
+                            ? AppColors.border
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Center(child: Text(t['front']!, style: const TextStyle(fontSize: 14))),
+                      child: Center(
+                        child: Text(
+                          t['front']!,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -475,10 +695,17 @@ class _HomeTabState extends State<HomeTab> {
                     child: Container(
                       height: 32,
                       decoration: BoxDecoration(
-                        color: _bodySide == 'back' ? AppColors.border : Colors.transparent,
+                        color: _bodySide == 'back'
+                            ? AppColors.border
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Center(child: Text(t['back']!, style: const TextStyle(fontSize: 14))),
+                      child: Center(
+                        child: Text(
+                          t['back']!,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -532,9 +759,19 @@ class _LegendItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 11, color: AppColors.mutedForeground)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppColors.mutedForeground,
+          ),
+        ),
       ],
     );
   }
@@ -546,7 +783,12 @@ class _ToolGauge extends StatelessWidget {
   final Color color;
   final String remainingText;
 
-  const _ToolGauge({required this.name, required this.health, required this.color, required this.remainingText});
+  const _ToolGauge({
+    required this.name,
+    required this.health,
+    required this.color,
+    required this.remainingText,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -566,16 +808,46 @@ class _ToolGauge extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text('$health', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: color)),
-                    const Text('%', style: TextStyle(fontSize: 10, color: AppColors.mutedForeground)),
+                    Text(
+                      '$health',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                    const Text(
+                      '%',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
           ),
           const SizedBox(height: 4),
-          Text(name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: color), maxLines: 1, overflow: TextOverflow.ellipsis),
-          Text(remainingText, style: const TextStyle(fontSize: 10, color: AppColors.mutedForeground), maxLines: 1, overflow: TextOverflow.ellipsis),
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            remainingText,
+            style: const TextStyle(
+              fontSize: 10,
+              color: AppColors.mutedForeground,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );

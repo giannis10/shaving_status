@@ -10,17 +10,13 @@ import 'ui/tabs/home_tab.dart';
 import 'ui/tabs/gear_tab.dart';
 import 'ui/tabs/stats_tab.dart';
 import 'ui/tabs/settings_tab.dart';
-import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'utils/copy.dart';
-import 'services/pwa_service.dart';
 
 void main() {
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => GroomingStore()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => GroomingStore())],
       child: const GroomingApp(),
     ),
   );
@@ -29,10 +25,10 @@ void main() {
 class AppScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+  };
 }
 
 class GroomingApp extends StatefulWidget {
@@ -53,45 +49,6 @@ class _GroomingAppState extends State<GroomingApp> {
   void initState() {
     super.initState();
     _loadPrefs();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkPwaInstallPrompt();
-    });
-  }
-
-  Future<void> _checkPwaInstallPrompt() async {
-    if (kIsWeb && !isPwaInstalled()) {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return;
-
-      final t = copy[_language] ?? copy['en']!;
-      showDialog(
-        context: context,
-        barrierDismissible: true,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.background,
-          title: Text(_language == 'el' ? 'Εγκατάσταση Εφαρμογής' : 'Install App'),
-          content: Text(
-            _language == 'el'
-                ? 'Για καλύτερη εμπειρία, προτείνουμε να εγκαταστήσετε την εφαρμογή στη συσκευή σας ώστε να τη βρίσκετε εύκολα και να δουλεύει άψογα.'
-                : 'For a better experience, we recommend installing the app on your device so you can access it easily and it works flawlessly.'
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(t['cancel'] ?? (_language == 'el' ? 'Όχι τώρα' : 'Not Now'), style: const TextStyle(color: AppColors.mutedForeground)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                installPwa();
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.cyan, foregroundColor: Colors.black),
-              child: Text(_language == 'el' ? 'Εγκατάσταση' : 'Install'),
-            ),
-          ],
-        ),
-      );
-    }
   }
 
   Future<void> _loadPrefs() async {
@@ -131,10 +88,13 @@ class _GroomingAppState extends State<GroomingApp> {
               Text(
                 _language == 'el' ? 'Επιλογή Γλώσσας' : 'Select language',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 48),
-              
+
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -147,10 +107,18 @@ class _GroomingAppState extends State<GroomingApp> {
                     foregroundColor: AppColors.foreground,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: _language == 'en' ? AppColors.cyan : Colors.transparent, width: 2),
+                      side: BorderSide(
+                        color: _language == 'en'
+                            ? AppColors.cyan
+                            : Colors.transparent,
+                        width: 2,
+                      ),
                     ),
                   ),
-                  child: const Text('English', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'English',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -166,10 +134,18 @@ class _GroomingAppState extends State<GroomingApp> {
                     foregroundColor: AppColors.foreground,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: _language == 'el' ? AppColors.cyan : Colors.transparent, width: 2),
+                      side: BorderSide(
+                        color: _language == 'el'
+                            ? AppColors.cyan
+                            : Colors.transparent,
+                        width: 2,
+                      ),
                     ),
                   ),
-                  child: const Text('Ελληνικά', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'Ελληνικά',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
 
@@ -178,14 +154,16 @@ class _GroomingAppState extends State<GroomingApp> {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [AppColors.cyan, AppColors.violet]),
+                  gradient: const LinearGradient(
+                    colors: [AppColors.cyan, AppColors.violet],
+                  ),
                   borderRadius: BorderRadius.circular(6),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.cyan.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
                 child: ElevatedButton(
@@ -195,10 +173,19 @@ class _GroomingAppState extends State<GroomingApp> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: Text(_language == 'el' ? 'Επόμενο' : 'Next', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: Text(
+                    _language == 'el' ? 'Επόμενο' : 'Next',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -228,22 +215,30 @@ class _GroomingAppState extends State<GroomingApp> {
                 hintText: t['enterName'],
                 filled: true,
                 fillColor: AppColors.muted,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
               ),
             ),
             const SizedBox(height: 24),
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppColors.cyan, AppColors.violet]),
+                gradient: const LinearGradient(
+                  colors: [AppColors.cyan, AppColors.violet],
+                ),
                 borderRadius: BorderRadius.circular(6),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.cyan.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ],
               ),
               child: ElevatedButton(
@@ -255,10 +250,19 @@ class _GroomingAppState extends State<GroomingApp> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Text(t['saveName']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                child: Text(
+                  t['saveName']!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ),
           ],
@@ -284,7 +288,8 @@ class _GroomingAppState extends State<GroomingApp> {
           surface: AppColors.background,
           primary: AppColors.foreground,
         ),
-        fontFamily: 'Inter', // Default fallback, Flutter handles sans-serif well
+        fontFamily:
+            'Inter', // Default fallback, Flutter handles sans-serif well
         textTheme: const TextTheme(
           bodyLarge: TextStyle(color: AppColors.foreground),
           bodyMedium: TextStyle(color: AppColors.foreground),
@@ -292,141 +297,173 @@ class _GroomingAppState extends State<GroomingApp> {
       ),
       home: Scaffold(
         backgroundColor: AppColors.background,
-        body: _userName == null ? _buildOnboarding(t) : Container(
-          decoration: const BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(-0.5, -0.8),
-              radius: 1.5,
-              colors: [
-                Color(0xFF1A1A2E), // Subtle dark purple/blue glow
-                AppColors.background,
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "${t['welcome']!} $_userName",
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.5,
-                              color: AppColors.mutedForeground,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _currentIndex == 0
-                                ? t['homeTitle']!
-                                : _currentIndex == 1
-                                    ? t['gearTitle']!
-                                    : _currentIndex == 2
+        body: _userName == null
+            ? _buildOnboarding(t)
+            : Container(
+                decoration: const BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(-0.5, -0.8),
+                    radius: 1.5,
+                    colors: [
+                      Color(0xFF1A1A2E), // Subtle dark purple/blue glow
+                      AppColors.background,
+                    ],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${t['welcome']!} $_userName",
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 1.5,
+                                      color: AppColors.mutedForeground,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _currentIndex == 0
+                                        ? t['homeTitle']!
+                                        : _currentIndex == 1
+                                        ? t['gearTitle']!
+                                        : _currentIndex == 2
                                         ? t['statsTitle']!
                                         : (t['settingsTitle'] ?? 'Settings'),
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        final url = Uri.parse('https://linktr.ee/Giannis.Tsimpouris');
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(url);
-                        }
-                      },
-                      child: const Text(
-                        "Dev G.T",
-                        style: TextStyle(
-                          color: AppColors.cyan,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                            GestureDetector(
+                              onTap: () async {
+                                final url = Uri.parse(
+                                  'https://linktr.ee/Giannis.Tsimpouris',
+                                );
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(url);
+                                }
+                              },
+                              child: const Text(
+                                "Dev G.T",
+                                style: TextStyle(
+                                  color: AppColors.cyan,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            PopupMenuButton<String>(
+                              icon: const Icon(
+                                LucideIcons.globe,
+                                color: AppColors.foreground,
+                              ),
+                              color: AppColors.muted,
+                              position: PopupMenuPosition.under,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                side: const BorderSide(color: AppColors.border),
+                              ),
+                              onSelected: (String lang) {
+                                _setLanguage(lang);
+                              },
+                              itemBuilder: (BuildContext context) =>
+                                  <PopupMenuEntry<String>>[
+                                    PopupMenuItem<String>(
+                                      value: 'en',
+                                      child: Row(
+                                        children: [
+                                          const Text(
+                                            'English',
+                                            style: TextStyle(
+                                              color: AppColors.foreground,
+                                            ),
+                                          ),
+                                          if (_language == 'en') ...[
+                                            const Spacer(),
+                                            const Icon(
+                                              LucideIcons.check,
+                                              size: 16,
+                                              color: AppColors.foreground,
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<String>(
+                                      value: 'el',
+                                      child: Row(
+                                        children: [
+                                          const Text(
+                                            'Ελληνικά',
+                                            style: TextStyle(
+                                              color: AppColors.foreground,
+                                            ),
+                                          ),
+                                          if (_language == 'el') ...[
+                                            const Spacer(),
+                                            const Icon(
+                                              LucideIcons.check,
+                                              size: 16,
+                                              color: AppColors.foreground,
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    PopupMenuButton<String>(
-                      icon: const Icon(LucideIcons.globe, color: AppColors.foreground),
-                      color: AppColors.muted,
-                      position: PopupMenuPosition.under,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        side: const BorderSide(color: AppColors.border),
+                      // Content
+                      Expanded(
+                        child: Consumer<GroomingStore>(
+                          builder: (context, store, child) {
+                            if (!store.isReady) {
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.mutedForeground,
+                                ),
+                              );
+                            }
+                            return IndexedStack(
+                              index: _currentIndex,
+                              children: [
+                                HomeTab(language: _language),
+                                GearTab(language: _language),
+                                StatsTab(language: _language),
+                                SettingsTab(language: _language),
+                              ],
+                            );
+                          },
+                        ),
                       ),
-                      onSelected: (String lang) {
-                        _setLanguage(lang);
-                      },
-                      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                        PopupMenuItem<String>(
-                          value: 'en',
-                          child: Row(
-                            children: [
-                              const Text('English', style: TextStyle(color: AppColors.foreground)),
-                              if (_language == 'en') ...[
-                                const Spacer(),
-                                const Icon(LucideIcons.check, size: 16, color: AppColors.foreground),
-                              ]
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'el',
-                          child: Row(
-                            children: [
-                              const Text('Ελληνικά', style: TextStyle(color: AppColors.foreground)),
-                              if (_language == 'el') ...[
-                                const Spacer(),
-                                const Icon(LucideIcons.check, size: 16, color: AppColors.foreground),
-                              ]
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              // Content
-              Expanded(
-                child: Consumer<GroomingStore>(
-                  builder: (context, store, child) {
-                    if (!store.isReady) {
-                      return const Center(child: CircularProgressIndicator(color: AppColors.mutedForeground));
-                    }
-                    return IndexedStack(
-                      index: _currentIndex,
-                      children: [
-                        HomeTab(language: _language),
-                        GearTab(language: _language),
-                        StatsTab(language: _language),
-                        SettingsTab(language: _language),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        ),
         extendBody: true, // For blur effect
-        bottomNavigationBar: _userName == null ? null : _FloatingNavBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-        ),
+        bottomNavigationBar: _userName == null
+            ? null
+            : _FloatingNavBar(
+                currentIndex: _currentIndex,
+                onTap: (index) => setState(() => _currentIndex = index),
+              ),
       ),
     );
   }
@@ -440,8 +477,13 @@ class _FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icons = [LucideIcons.home, LucideIcons.scissors, LucideIcons.barChart3, LucideIcons.settings];
-    
+    final icons = [
+      LucideIcons.home,
+      LucideIcons.scissors,
+      LucideIcons.barChart3,
+      LucideIcons.settings,
+    ];
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.only(bottom: 24, left: 48, right: 48),
@@ -454,7 +496,9 @@ class _FloatingNavBar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.nav, // Semi-transparent dark
                 borderRadius: BorderRadius.circular(50),
-                border: Border.all(color: const Color(0x1AFFFFFF)), // Subtle light border
+                border: Border.all(
+                  color: const Color(0x1AFFFFFF),
+                ), // Subtle light border
               ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -504,7 +548,9 @@ class _FloatingNavBar extends StatelessWidget {
                                   duration: const Duration(milliseconds: 200),
                                   child: Icon(
                                     icons[index],
-                                    color: isActive ? AppColors.foreground : AppColors.mutedForeground,
+                                    color: isActive
+                                        ? AppColors.foreground
+                                        : AppColors.mutedForeground,
                                     size: 24,
                                   ),
                                 ),
@@ -524,4 +570,3 @@ class _FloatingNavBar extends StatelessWidget {
     );
   }
 }
-
