@@ -10,8 +10,10 @@ import 'ui/tabs/home_tab.dart';
 import 'ui/tabs/gear_tab.dart';
 import 'ui/tabs/stats_tab.dart';
 import 'ui/tabs/settings_tab.dart';
+import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'utils/copy.dart';
+import 'services/pwa_service.dart';
 
 void main() {
   runApp(
@@ -51,6 +53,45 @@ class _GroomingAppState extends State<GroomingApp> {
   void initState() {
     super.initState();
     _loadPrefs();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPwaInstallPrompt();
+    });
+  }
+
+  Future<void> _checkPwaInstallPrompt() async {
+    if (kIsWeb && !isPwaInstalled()) {
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
+
+      final t = copy[_language] ?? copy['en']!;
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.background,
+          title: Text(_language == 'el' ? 'Εγκατάσταση Εφαρμογής' : 'Install App'),
+          content: Text(
+            _language == 'el'
+                ? 'Για καλύτερη εμπειρία, προτείνουμε να εγκαταστήσετε την εφαρμογή στη συσκευή σας ώστε να τη βρίσκετε εύκολα και να δουλεύει άψογα.'
+                : 'For a better experience, we recommend installing the app on your device so you can access it easily and it works flawlessly.'
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(t['cancel'] ?? (_language == 'el' ? 'Όχι τώρα' : 'Not Now'), style: const TextStyle(color: AppColors.mutedForeground)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                installPwa();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.cyan, foregroundColor: Colors.black),
+              child: Text(_language == 'el' ? 'Εγκατάσταση' : 'Install'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Future<void> _loadPrefs() async {

@@ -29,46 +29,6 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _checkForUpdates();
-    _checkPwaInstallPrompt();
-  }
-
-  Future<void> _checkPwaInstallPrompt() async {
-    // Check if running on web and not installed as standalone PWA
-    if (kIsWeb && !isPwaInstalled()) {
-      // The user wants it to show EVERY time they open it until they install it.
-      // Small delay to let the UI build first
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return;
-
-      final t = copy[widget.language]!;
-      showDialog(
-        context: context,
-        barrierDismissible: true,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.background,
-          title: Text(widget.language == 'el' ? 'Εγκατάσταση Εφαρμογής' : 'Install App'),
-          content: Text(
-            widget.language == 'el'
-                ? 'Για καλύτερη εμπειρία, προτείνουμε να εγκαταστήσετε την εφαρμογή στη συσκευή σας ώστε να τη βρίσκετε εύκολα και να δουλεύει άψογα.'
-                : 'For a better experience, we recommend installing the app on your device so you can access it easily and it works flawlessly.'
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(t['cancel'] ?? (widget.language == 'el' ? 'Όχι τώρα' : 'Not Now'), style: const TextStyle(color: AppColors.mutedForeground)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                installPwa();
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.cyan, foregroundColor: Colors.black),
-              child: Text(widget.language == 'el' ? 'Εγκατάσταση' : 'Install'),
-            ),
-          ],
-        ),
-      );
-    }
   }
 
   Future<void> _checkForUpdates() async {
