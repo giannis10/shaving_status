@@ -136,11 +136,15 @@ class GroomingStore extends ChangeNotifier {
         
         // "Against the grain" means shave is closer, lasts ~25% longer before growth is annoying
         final methodFactor = againstTheGrain ? 1.25 : 1.0;
+        
+        // Trimmer factor: Trimmer leaves some hair behind (e.g. 0.5mm), so the annoying threshold is reached ~15-20% faster.
+        final usedTool = _tools.firstWhere((t) => t.id == toolId, orElse: () => Tool(id: '', name: '', maxUses: 1, currentUses: 0, color: 0xFF06b6d4));
+        final toolFactor = usedTool.type == ToolType.trimmer ? 0.85 : 1.0;
 
         final updatedZone = zone.copyWith(
           lastShaved: now,
           growthRateMmDay: zone.learningSamples == 0 ? measuredRate : zone.growthRateMmDay * 0.7 + measuredRate * 0.3,
-          maxDaysThreshold: (((elapsedDays > 0 ? elapsedDays : zone.maxDaysThreshold) * feedbackFactor) * methodFactor).round().clamp(1, 9999),
+          maxDaysThreshold: (((elapsedDays > 0 ? elapsedDays : zone.maxDaysThreshold) * feedbackFactor * toolFactor) * methodFactor).round().clamp(1, 9999),
           learningSamples: zone.learningSamples + 1,
         );
         
@@ -221,10 +225,11 @@ class GroomingStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addTool(String name, int maxUses, ToolColor color) {
+  void addTool(String name, ToolType type, int maxUses, int color) {
     final tool = Tool(
       id: _makeId(),
       name: name,
+      type: type,
       maxUses: maxUses,
       currentUses: 0,
       color: color,
@@ -235,11 +240,12 @@ class GroomingStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateTool(String toolId, String name, int maxUses, ToolColor color) {
+  void updateTool(String toolId, String name, ToolType type, int maxUses, int color) {
     _tools = _tools.map((tool) {
       if (tool.id == toolId) {
         return tool.copyWith(
           name: name,
+          type: type,
           maxUses: maxUses,
           color: color,
           currentUses: tool.currentUses > maxUses ? maxUses : tool.currentUses, // clamp
@@ -255,6 +261,16 @@ class GroomingStore extends ChangeNotifier {
   void deleteTool(String toolId) {
     _tools.removeWhere((tool) => tool.id == toolId);
     
+    _saveState();
+    notifyListeners();
+  }
+
+  void reorderTools(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final Tool item = _tools.removeAt(oldIndex);
+    _tools.insert(newIndex, item);
     _saveState();
     notifyListeners();
   }

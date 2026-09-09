@@ -90,18 +90,7 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
-  Color _getToolColor(ToolColor color) {
-    switch (color) {
-      case ToolColor.lime:
-        return AppColors.lime;
-      case ToolColor.cyan:
-        return AppColors.cyan;
-      case ToolColor.coral:
-        return AppColors.coral;
-      case ToolColor.violet:
-        return AppColors.violet;
-    }
-  }
+
 
   void _openZoneAction(Zone zone) {
     final t = copy[widget.language]!;
@@ -178,7 +167,7 @@ class _HomeTabState extends State<HomeTab> {
                                   borderRadius: BorderRadius.circular(6),
                                   side: BorderSide(
                                     color: isSelected
-                                        ? _getToolColor(tool.color)
+                                        ? Color(tool.color)
                                         : AppColors.border,
                                   ),
                                 ),
@@ -193,7 +182,7 @@ class _HomeTabState extends State<HomeTab> {
                                     width: 12,
                                     height: 12,
                                     decoration: BoxDecoration(
-                                      color: _getToolColor(tool.color),
+                                      color: Color(tool.color),
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -611,7 +600,7 @@ class _HomeTabState extends State<HomeTab> {
                         return _ToolGauge(
                           name: tool.name,
                           health: health,
-                          color: _getToolColor(tool.color),
+                          color: Color(tool.color),
                           remainingText:
                               '${tool.maxUses - tool.currentUses} ${t['usesRemaining']}',
                         );

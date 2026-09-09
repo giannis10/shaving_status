@@ -63,6 +63,7 @@ class NotificationService {
       channelDescription: 'Notifications for when it is time to shave',
       importance: Importance.max,
       priority: Priority.high,
+      largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
     );
 
     const NotificationDetails platformChannelSpecifics = NotificationDetails(

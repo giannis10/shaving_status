@@ -1,15 +1,17 @@
-enum ToolColor { lime, cyan, coral, violet }
+enum ToolType { razor, trimmer }
 
 class Tool {
   final String id;
   final String name;
+  final ToolType type;
   final int maxUses;
   final int currentUses;
-  final ToolColor color;
+  final int color; // A Hex integer (e.g., 0xFF84cc16)
 
   Tool({
     required this.id,
     required this.name,
+    this.type = ToolType.razor,
     required this.maxUses,
     required this.currentUses,
     required this.color,
@@ -18,13 +20,15 @@ class Tool {
   Tool copyWith({
     String? id,
     String? name,
+    ToolType? type,
     int? maxUses,
     int? currentUses,
-    ToolColor? color,
+    int? color,
   }) {
     return Tool(
       id: id ?? this.id,
       name: name ?? this.name,
+      type: type ?? this.type,
       maxUses: maxUses ?? this.maxUses,
       currentUses: currentUses ?? this.currentUses,
       color: color ?? this.color,
@@ -32,12 +36,30 @@ class Tool {
   }
 
   factory Tool.fromJson(Map<String, dynamic> json) {
+    int parsedColor;
+    if (json['color'] is int) {
+      parsedColor = json['color'];
+    } else if (json['color'] is String) {
+      switch (json['color']) {
+        case 'cyan': parsedColor = 0xFF06b6d4; break;
+        case 'coral': parsedColor = 0xFFf43f5e; break;
+        case 'violet': parsedColor = 0xFF8b5cf6; break;
+        case 'lime':
+        default: parsedColor = 0xFF84cc16; break;
+      }
+    } else {
+      parsedColor = 0xFF84cc16;
+    }
+
     return Tool(
       id: json['id'] as String,
       name: json['name'] as String,
+      type: json['type'] != null 
+          ? ToolType.values.firstWhere((e) => e.name == json['type'], orElse: () => ToolType.razor)
+          : ToolType.razor,
       maxUses: json['maxUses'] as int,
       currentUses: json['currentUses'] as int,
-      color: ToolColor.values.firstWhere((e) => e.name == json['color']),
+      color: parsedColor,
     );
   }
 
@@ -45,9 +67,10 @@ class Tool {
     return {
       'id': id,
       'name': name,
+      'type': type.name,
       'maxUses': maxUses,
       'currentUses': currentUses,
-      'color': color.name,
+      'color': color,
     };
   }
 }

@@ -6,6 +6,7 @@ import '../../store/grooming_store.dart';
 import '../../models/models.dart';
 import '../colors.dart';
 import '../../utils/copy.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class GearTab extends StatefulWidget {
   final String language;
@@ -17,22 +18,14 @@ class GearTab extends StatefulWidget {
 }
 
 class _GearTabState extends State<GearTab> {
-  Color _getToolColor(ToolColor color) {
-    switch (color) {
-      case ToolColor.lime: return AppColors.lime;
-      case ToolColor.cyan: return AppColors.cyan;
-      case ToolColor.coral: return AppColors.coral;
-      case ToolColor.violet: return AppColors.violet;
-    }
-  }
-
   void _showAddEditTool(BuildContext context, {Tool? existingTool}) {
     final t = copy[widget.language]!;
     final store = context.read<GroomingStore>();
     
     String name = existingTool?.name ?? '';
+    ToolType type = existingTool?.type ?? ToolType.razor;
     int maxUses = existingTool?.maxUses ?? 10;
-    ToolColor color = existingTool?.color ?? ToolColor.lime;
+    int color = existingTool?.color ?? 0xFF84cc16;
 
     final nameController = TextEditingController(text: name);
     final maxUsesController = TextEditingController(text: maxUses.toString());
@@ -99,37 +92,99 @@ class _GearTabState extends State<GearTab> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Type Picker
+                  Text(t['toolType']!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => type = ToolType.razor),
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: type == ToolType.razor ? AppColors.cyan.withOpacity(0.2) : AppColors.muted,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: type == ToolType.razor ? AppColors.cyan : Colors.transparent),
+                            ),
+                            child: Center(
+                              child: Text(t['razor']!, style: TextStyle(
+                                fontWeight: FontWeight.bold, 
+                                color: type == ToolType.razor ? AppColors.cyan : AppColors.foreground
+                              )),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => type = ToolType.trimmer),
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: type == ToolType.trimmer ? AppColors.cyan.withOpacity(0.2) : AppColors.muted,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: type == ToolType.trimmer ? AppColors.cyan : Colors.transparent),
+                            ),
+                            child: Center(
+                              child: Text(t['trimmer']!, style: TextStyle(
+                                fontWeight: FontWeight.bold, 
+                                color: type == ToolType.trimmer ? AppColors.cyan : AppColors.foreground
+                              )),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   // Color Picker
                   Text(t['accent']!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 8),
                   Row(
-                    children: ToolColor.values.map((c) {
-                      final isSelected = color == c;
-                      return Expanded(
+                    children: [
+                      Expanded(
                         child: GestureDetector(
-                          onTap: () => setModalState(() => color = c),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Pick a color!'),
+                                  content: SingleChildScrollView(
+                                    child: ColorPicker(
+                                      pickerColor: Color(color),
+                                      onColorChanged: (Color newColor) {
+                                        setModalState(() => color = newColor.value);
+                                      },
+                                    ),
+                                  ),
+                                  actions: <Widget>[
+                                    ElevatedButton(
+                                      child: const Text('Got it'),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
                           child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
                             height: 48,
                             decoration: BoxDecoration(
-                              color: AppColors.background,
-                              border: Border.all(color: isSelected ? _getToolColor(c) : AppColors.border, width: isSelected ? 2 : 1),
+                              color: Color(color),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Center(
-                              child: Container(
-                                width: 16,
-                                height: 16,
-                                decoration: BoxDecoration(
-                                  color: _getToolColor(c),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
+                            child: const Center(
+                              child: Icon(LucideIcons.palette, color: Colors.white),
                             ),
                           ),
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 32),
                   // Buttons
@@ -151,9 +206,9 @@ class _GearTabState extends State<GearTab> {
                       onPressed: () {
                         if (name.trim().isEmpty) return;
                         if (existingTool != null) {
-                          store.updateTool(existingTool.id, name.trim(), maxUses, color);
+                          store.updateTool(existingTool.id, name.trim(), type, maxUses, color);
                         } else {
-                          store.addTool(name.trim(), maxUses, color);
+                          store.addTool(name.trim(), type, maxUses, color);
                         }
                         Navigator.pop(ctx);
                       },
@@ -209,115 +264,139 @@ class _GearTabState extends State<GearTab> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
         children: [
-          ...store.tools.map((tool) {
-            final health = (1 - tool.currentUses / tool.maxUses).clamp(0.0, 1.0);
-            final healthPercent = (health * 100).round();
-            final toolColor = _getToolColor(tool.color);
+          ReorderableListView(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            onReorder: (oldIndex, newIndex) {
+              store.reorderTools(oldIndex, newIndex);
+            },
+            children: [
+              ...store.tools.map((tool) {
+                final health = (1 - tool.currentUses / tool.maxUses).clamp(0.0, 1.0);
+                final healthPercent = (health * 100).round();
+                final toolColor = Color(tool.color);
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                return Container(
+                  key: ValueKey(tool.id),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(top: 2, right: 12),
+                            child: Icon(LucideIcons.gripVertical, size: 20, color: AppColors.mutedForeground),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(color: toolColor, shape: BoxShape.circle),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: BoxDecoration(color: toolColor, shape: BoxShape.circle),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        tool.name,
+                                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    tool.name,
-                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Text(
+                                      tool.type == ToolType.trimmer ? t['trimmer']! : t['razor']!,
+                                      style: const TextStyle(color: AppColors.cyan, fontSize: 12, fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '• ${tool.currentUses} ${t['of']} ${tool.maxUses} ${t['uses']}',
+                                      style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${tool.currentUses} ${t['of']} ${tool.maxUses} ${t['uses']}',
-                              style: const TextStyle(color: AppColors.mutedForeground, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            '$healthPercent',
-                            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
                           ),
-                          const Text('%', style: TextStyle(fontSize: 14, color: AppColors.mutedForeground)),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                '$healthPercent',
+                                style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
+                              ),
+                              const Text('%', style: TextStyle(fontSize: 14, color: AppColors.mutedForeground)),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: AppColors.muted,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: health,
-                      child: Container(
+                      const SizedBox(height: 16),
+                      Container(
+                        height: 6,
                         decoration: BoxDecoration(
-                          color: toolColor,
+                          color: AppColors.muted,
                           borderRadius: BorderRadius.circular(3),
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => store.replaceBlade(tool.id),
-                          icon: const Icon(LucideIcons.refreshCw, size: 16, color: AppColors.foreground),
-                          label: Text(t['replaceBlade']!, style: const TextStyle(color: AppColors.foreground)),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.border),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: health,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: toolColor,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      OutlinedButton(
-                        onPressed: () => _showAddEditTool(context, existingTool: tool),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.border),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        ),
-                        child: const Icon(LucideIcons.pencil, size: 16, color: AppColors.foreground),
-                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => store.replaceBlade(tool.id),
+                              icon: const Icon(LucideIcons.refreshCw, size: 16, color: AppColors.foreground),
+                              label: Text(t['replaceBlade']!, style: const TextStyle(color: AppColors.foreground)),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppColors.border),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            onPressed: () => _showAddEditTool(context, existingTool: tool),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.border),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            ),
+                            child: const Icon(LucideIcons.pencil, size: 16, color: AppColors.foreground),
+                          ),
+                        ],
+                      )
                     ],
-                  )
-                ],
-              ),
-            );
-          }),
+                  ),
+                );
+              }),
+            ],
+          ),
           const SizedBox(height: 8),
           Container(
             width: double.infinity,

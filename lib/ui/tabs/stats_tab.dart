@@ -125,7 +125,7 @@ class _StatsTabState extends State<StatsTab> {
           
           const SizedBox(height: 16),
           // Heatmap
-          _Heatmap(logs: filteredLogs, year: _selectedYear),
+          _Heatmap(logs: filteredLogs, year: _selectedYear, tools: store.tools),
           const SizedBox(height: 32),
           Text(
             t['recent']!,
@@ -170,14 +170,15 @@ class _StatsTabState extends State<StatsTab> {
                       Container(
                         width: 36,
                         height: 36,
-                        decoration: const BoxDecoration(
-                          color: AppColors.muted,
+                        decoration: BoxDecoration(
+                          color: tool != null ? Color(tool.color).withOpacity(0.2) : AppColors.muted,
+                          border: Border.all(color: tool != null ? Color(tool.color) : Colors.transparent),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           log.type == LogType.SHAVE ? LucideIcons.scissors : LucideIcons.refreshCw,
                           size: 16,
-                          color: AppColors.foreground,
+                          color: tool != null ? Color(tool.color) : AppColors.foreground,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -250,8 +251,9 @@ class _StatsTabState extends State<StatsTab> {
 class _Heatmap extends StatelessWidget {
   final List<GroomingLog> logs;
   final int year;
+  final List<Tool> tools;
 
-  const _Heatmap({required this.logs, required this.year});
+  const _Heatmap({required this.logs, required this.year, required this.tools});
 
   @override
   Widget build(BuildContext context) {
@@ -267,16 +269,27 @@ class _Heatmap extends StatelessWidget {
     const int totalDays = 364;
     
     final counts = <String, int>{};
+    final dayColors = <String, int>{};
     for (var log in logs) {
       final d = DateTime.fromMillisecondsSinceEpoch(log.date);
       final key = '${d.year}-${d.month}-${d.day}';
       counts[key] = (counts[key] ?? 0) + 1;
+      
+      if (!dayColors.containsKey(key)) {
+        final tool = tools.where((t) => t.id == log.toolId).firstOrNull;
+        if (tool != null) {
+          dayColors[key] = tool.color;
+        }
+      }
     }
 
     final days = List.generate(totalDays, (index) {
       final date = endDate.subtract(Duration(days: (totalDays - 1) - index));
       final key = '${date.year}-${date.month}-${date.day}';
-      return counts[key] ?? 0;
+      return {
+        'count': counts[key] ?? 0,
+        'color': dayColors[key] ?? AppColors.coral.value,
+      };
     });
 
     return SingleChildScrollView(
@@ -290,17 +303,19 @@ class _Heatmap extends StatelessWidget {
             child: Column(
               children: List.generate(7, (dayIndex) {
                 final index = weekIndex * 7 + dayIndex;
-                final count = days[index];
+                final count = days[index]['count'] as int;
+                final toolColorValue = days[index]['color'] as int;
+                final baseColor = Color(toolColorValue);
                 
                 Color color;
                 if (count == 0) {
                   color = AppColors.border; // heat-0
                 } else if (count == 1) {
-                  color = AppColors.coral.withValues(alpha: 0.4); // heat-1
+                  color = baseColor.withValues(alpha: 0.4); // heat-1
                 } else if (count == 2) {
-                  color = AppColors.coral.withValues(alpha: 0.7); // heat-2
+                  color = baseColor.withValues(alpha: 0.7); // heat-2
                 } else {
-                  color = AppColors.coral; // heat-3
+                  color = baseColor; // heat-3
                 }
                 
                 return Container(
