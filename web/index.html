@@ -112,6 +112,10 @@
       window.isPwaInstallable = true;
     });
 
+    window.isPwaInstalled = function() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    };
+
     window.installPWA = async function() {
       if (deferredPrompt) {
         deferredPrompt.prompt();

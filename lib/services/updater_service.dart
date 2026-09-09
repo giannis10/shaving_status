@@ -8,7 +8,7 @@ class UpdaterService {
   static const String _releasesUrl = 'https://github.com/giannis10/shaving_status/releases/latest';
 
   /// Ελέγχει αν υπάρχει νεότερη έκδοση στο GitHub Releases
-  static Future<bool> checkForUpdates() async {
+  static Future<Map<String, dynamic>> checkForUpdates() async {
     try {
       final response = await http.get(Uri.parse(_repoUrl));
       if (response.statusCode == 200) {
@@ -24,12 +24,16 @@ class UpdaterService {
         final currentVersion = packageInfo.version; // π.χ. '1.0.0'
 
         // Απλή σύγκριση εκδόσεων (π.χ. '1.0.1' > '1.0.0')
-        return _isVersionGreater(latestVersion, currentVersion);
+        final bool hasUpdate = _isVersionGreater(latestVersion, currentVersion);
+        return {
+          'hasUpdate': hasUpdate,
+          'releaseNotes': data['body'] ?? '',
+        };
       }
     } catch (e) {
       print('Update check failed: $e');
     }
-    return false;
+    return {'hasUpdate': false, 'releaseNotes': ''};
   }
 
   /// Ανοίγει τον browser στη σελίδα των releases του GitHub
